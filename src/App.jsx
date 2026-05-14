@@ -1001,29 +1001,20 @@ export default function App() {
 
  const fetchSettings = useCallback(async () => {
   if (!session) return
-  const { data } = await supabase.from('user_settings').select('*').eq('user_id', session.user.id).single()
+  // On enlève le .eq('user_id', session.user.id) pour charger les réglages partagés
+  const { data } = await supabase
+    .from('user_settings')
+    .select('*')
+    // On ne filtre plus par utilisateur !
+    .limit(1) 
+    .single()
   
-  if (data?.categories) setCategories([...data.categories].sort((a, b) => a.name.localeCompare(b.name)))
+  if (data?.categories) 
+    setCategories([...data.categories].sort((a, b) => a.name.localeCompare(b.name)))
   
-  // CORRECTION : On enlève le texte qui était ici
-  if (data?.collaborators) setCollaborators([...data.collaborators].sort()) 
+  if (data?.collaborators) 
+    setCollaborators([...data.collaborators].sort()) 
 }, [session])
-
-  useEffect(() => { 
-  fetchNotes().then(() => rolloverOverdueTasks())
-  fetchSettings() 
-}, [fetchNotes, fetchSettings, rolloverOverdueTasks])
-
-  const saveCategories = async (newCats) => {
-  // On trie par nom avant de sauvegarder
-  const sorted = [...newCats].sort((a, b) => a.name.localeCompare(b.name));
-  
-  setCategories(sorted);
-  await supabase.from('user_settings').upsert({ 
-    user_id: session.user.id, 
-    categories: sorted 
-  });
-};
 
   
  const saveCollaborators = async (newCollabs) => {
