@@ -967,14 +967,6 @@ export default function App() {
     return () => subscription.unsubscribe()
   }, [])
 
-  // DÉCLENCHEUR DE CHARGEMENT
-  useEffect(() => {
-    if (session) {
-      fetchNotes();
-      fetchSettings();
-    }
-  }, [session, fetchNotes, fetchSettings]);
-
   const fetchNotes = useCallback(async () => {
     if (!session) return
     const {data} = await supabase.from('notes').select('*').order('importance').order('created_at',{ascending:false})
@@ -1011,6 +1003,14 @@ export default function App() {
 
   const fetchSettings = useCallback(async () => {
   if (!session) return
+
+    // DÉCLENCHEUR DE CHARGEMENT
+  useEffect(() => {
+    if (session) {
+      fetchNotes();
+      fetchSettings();
+    }
+  }, [session, fetchNotes, fetchSettings]);
   
   const { data, error } = await supabase
     .from('user_settings')
@@ -1036,12 +1036,11 @@ export default function App() {
   }
 }, [session])
 
-  // 2. Sauvegarder les catégories pour TOUT LE MONDE
   const saveCategories = async (newCats) => {
     const sorted = [...newCats].sort((a, b) => a.name.localeCompare(b.name))
     setCategories(sorted)
     
-    // On cherche s'il existe déjà une ligne de réglages
+    // On cherche la ligne existante pour ne pas en créer une deuxième
     const { data } = await supabase.from('user_settings').select('id').limit(1)
     const existingId = data && data[0] ? data[0].id : null
 
@@ -1051,7 +1050,6 @@ export default function App() {
     })
   }
 
-  // 3. Sauvegarder l'équipe pour TOUT LE MONDE
   const saveCollaborators = async (newCollabs) => {
     const sorted = [...newCollabs].sort()
     setCollaborators(sorted)
@@ -1064,6 +1062,7 @@ export default function App() {
       collaborators: sorted
     })
   }
+  
   const saveNote = async (payload) => {
   const { id, type, status, assignee, ...dataToSave } = payload;
   
@@ -1103,16 +1102,6 @@ export default function App() {
   )
 
   if (!session) return <AuthScreen onAuth={setSession} />
-
-// SÉCURITÉ ANTI-ÉCRAN NOIR (à insérer ici)
-  if (session && (!notes || !categories)) {
-    return (
-      <div style={{...s.overlay, background:'#f8f6f1', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center'}}>
-        <p style={{fontSize: 40}}>⏳</p>
-        <p style={{color:'#9a8f7a', marginTop:10, fontFamily:'sans-serif'}}>Chargement de votre espace...</p>
-      </div>
-    )
-  }
     
   const filtered = notes
   .filter(n => {
