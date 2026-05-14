@@ -946,24 +946,22 @@ function SettingsView({ session, categories, onCategoriesChange, collaborators, 
 
 /* ──────────────────── MAIN APP ──────────────────── */
 export default function App() {
-  console.log("L'application démarre !");
-  const [session, setSession]       = useState(null)
-  const [loading, setLoading]       = useState(true)
-  const [notes, setNotes]           = useState([])
+  const [session, setSession] = useState(null)
+  const [loading, setLoading] = useState(true) [cite: 130]
+  const [notes, setNotes] = useState([])
   const [categories, setCategories] = useState([])
-  const [tab, setTab]               = useState('notes')
-  const [modal, setModal]           = useState(null)
-  const [filterQ, setFilterQ]       = useState(0)
+  const [tab, setTab] = useState('notes')
+  const [modal, setModal] = useState(null)
+  const [filterQ, setFilterQ] = useState(0)
   const [filterCats, setFilterCats] = useState([])
-  const [isCatsOpen, setIsCatsOpen] = useState(false);
-  const [search, setSearch]         = useState('')
-  const [showDone, setShowDone]     = useState(false)
+  const [isCatsOpen, setIsCatsOpen] = useState(false)
+  const [search, setSearch] = useState('') [cite: 131]
+  const [showDone, setShowDone] = useState(false)
   const [showWaiting, setShowWaiting] = useState(false)
   const [collaborators, setCollaborators] = useState([])
-  const [filterAssignee, setFilterAssignee] = useState(null);
+  const [filterAssignee, setFilterAssignee] = useState(null
   
-  useEffect(() => {
-    // 1. On écoute la session
+ useEffect(() => {
     supabase.auth.getSession().then(({data:{session}}) => { 
       setSession(session)
       setLoading(false) 
@@ -972,11 +970,12 @@ export default function App() {
     const {data:{subscription}} = supabase.auth.onAuthStateChange((_e,s) => {
       setSession(s)
       if (s) {
-        // 2. Dès qu'on est sûr d'avoir un utilisateur, on lance les chargements
         fetchNotes()
         fetchSettings()
       }
     })
+    return () => subscription.unsubscribe()
+  }, [fetchNotes, fetchSettings])
 
     return () => subscription.unsubscribe()
   }, [fetchNotes, fetchSettings])
@@ -1016,30 +1015,14 @@ export default function App() {
  /* ──────────────────── GESTION DES RÉGLAGES PARTAGÉS ──────────────────── */
 
 const fetchSettings = useCallback(async () => {
-    if (!session) return;
-    
-    // On récupère la première ligne de réglages disponible (puisque RLS est désactivé)
-    const { data, error } = await supabase
-      .from('user_settings')
-      .select('*')
-      .limit(1);
-    
-    if (error) {
-      console.error("Erreur Supabase réglages:", error.message);
-      return;
-    }
-
+    if (!session) return
+    const { data, error } = await supabase.from('user_settings').select('*').limit(1) 
     if (data && data.length > 0) {
-      const settings = data[0];
-      // Vérification de sécurité : on ne "spread" que si c'est un tableau valide
-      if (settings.categories && Array.isArray(settings.categories)) {
-        setCategories([...settings.categories].sort((a, b) => a.name.localeCompare(b.name)));
-      }
-      if (settings.collaborators && Array.isArray(settings.collaborators)) {
-        setCollaborators([...settings.collaborators].sort());
-      }
+      const settings = data[0]
+      if (settings.categories) setCategories([...settings.categories].sort((a, b) => a.name.localeCompare(b.name)))
+      if (settings.collaborators) setCollaborators([...settings.collaborators].sort())
     }
-  }, [session]); 
+  }, [session])
 
   const saveCategories = async (newCats) => {
     const sorted = [...newCats].sort((a, b) => a.name.localeCompare(b.name))
