@@ -969,16 +969,6 @@ export default function App() {
     setNotes(data || []);
   }, [session]);
 
-  const fetchSettings = useCallback(async () => {
-    if (!session) return;
-    const { data, error } = await supabase.from('user_settings').select('*').limit(1);
-    if (error) return;
-    if (data && data.length > 0) {
-      const settings = data[0];
-      if (settings.categories) setCategories([...settings.categories].sort((a, b) => a.name.localeCompare(b.name)));
-      if (settings.collaborators) setCollaborators([...settings.collaborators].sort());
-    }
-  }, [session]);
 
   // 3. LE LANCEMENT (useEffect)
   useEffect(() => {
@@ -998,17 +988,22 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, [fetchNotes, fetchSettings]);
 
-  const rolloverOverdueTasks = useCallback(async () => {
-    if (!session) return;
-    const now = new Date();
-    const overdue = notes.filter(n => n.type === 'task' && n.status !== 'done' && n.reminder
-    if (overdue.length === 0) return
-    const tomorrow = new Date(now)
-    tomorrow.setDate(tomorrow.getDate() + 1)
-    tomorrow.setHours(7, 0, 0, 0)
-    await Promise.all(overdue.map(n => supabase.from('notes').update({ reminder_at: tomorrow.toISOString() }).eq('id', n.id)))
-    await fetchNotes()
-  }, [session, notes, fetchNotes])
+const rolloverOverdueTasks = useCallback(async () => {
+  if (!session) return;
+  const now = new Date();
+  
+  // Correction de la ligne coupée :
+  const overdue = notes.filter(n => n.type === 'task' && n.status !== 'done' && n.reminder_at && new Date(n.reminder_at) < now);
+
+  if (overdue.length === 0) return;
+  
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(7, 0, 0, 0);
+  
+  await Promise.all(overdue.map(n => supabase.from('notes').update({ reminder_at: tomorrow.toISOString() }).eq('id', n.id)));
+  await fetchNotes();
+}, [session, notes, fetchNotes]); //
 
  /* ──────────────────── GESTION DES RÉGLAGES PARTAGÉS ──────────────────── */
 
