@@ -970,21 +970,21 @@ export default function App() {
   }, [session]);
 
    // 3. LE LANCEMENT (useEffect) - TOUJOURS APRÈS LES OUTILS
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setLoading(false)
-    })
+useEffect(() => {
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    setSession(session)
+    setLoading(false)
+  })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
-      setSession(s)
-      if (s) {
-        fetchNotes()
-        fetchSettings()
-      }
-    })
-    return () => subscription.unsubscribe()
-  }, [fetchNotes, fetchSettings]);
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
+    setSession(s)
+    if (s) {
+      fetchNotes()
+      fetchSettings()
+    }
+  })
+  return () => subscription.unsubscribe()
+}, [fetchNotes, fetchSettings]);
 
 
   const rolloverOverdueTasks = useCallback(async () => {
