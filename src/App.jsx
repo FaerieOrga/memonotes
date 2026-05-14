@@ -643,7 +643,7 @@ function CatSettings({ categories, onChange }) {
   const [newColor, setNewColor] = useState(CAT_PALETTE[0])
   const [editId, setEditId]     = useState(null)
   const [editName, setEditName] = useState('')
-  const [editColor, setEditColor] = useState('') // On ajoute l'état pour la couleur éditée [cite: 84]
+  const [editColor, setEditColor] = useState('') // On ajoute l'état pour la couleur éditée
 
   const add = () => {
     if (!newName.trim()) return
@@ -946,8 +946,9 @@ function SettingsView({ session, categories, onCategoriesChange, collaborators, 
 
 /* ──────────────────── MAIN APP ──────────────────── */
 export default function App() {
+  // 1. LES TIROIRS (États)
   const [session, setSession] = useState(null)
-  const [loading, setLoading] = useState(true) [cite: 130]
+  const [loading, setLoading] = useState(true)
   const [notes, setNotes] = useState([])
   const [categories, setCategories] = useState([])
   const [tab, setTab] = useState('notes')
@@ -955,19 +956,21 @@ export default function App() {
   const [filterQ, setFilterQ] = useState(0)
   const [filterCats, setFilterCats] = useState([])
   const [isCatsOpen, setIsCatsOpen] = useState(false)
-  const [search, setSearch] = useState('') [cite: 131]
+  const [search, setSearch] = useState('')
   const [showDone, setShowDone] = useState(false)
   const [showWaiting, setShowWaiting] = useState(false)
   const [collaborators, setCollaborators] = useState([])
-  const [filterAssignee, setFilterAssignee] = useState(null
+  const [filterAssignee, setFilterAssignee] = useState(null)
   
  useEffect(() => {
-    supabase.auth.getSession().then(({data:{session}}) => { 
+   // 3. LE LANCEMENT (useEffect) - TOUJOURS APRÈS LES OUTILS
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
-      setLoading(false) 
+      setLoading(false)
     })
 
-    const {data:{subscription}} = supabase.auth.onAuthStateChange((_e,s) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
       setSession(s)
       if (s) {
         fetchNotes()
@@ -977,50 +980,42 @@ export default function App() {
     return () => subscription.unsubscribe()
   }, [fetchNotes, fetchSettings])
 
-    return () => subscription.unsubscribe()
-  }, [fetchNotes, fetchSettings])
-
+  // 2. LES OUTILS (Fonctions)
   const fetchNotes = useCallback(async () => {
     if (!session) return
-    const {data} = await supabase.from('notes').select('*').order('importance').order('created_at',{ascending:false})
-    setNotes(data||[])
+    const { data } = await supabase.from('notes').select('*').order('importance').order('created_at', { ascending: false })
+    setNotes(data || [])
   }, [session])
 
   const rolloverOverdueTasks = useCallback(async () => {
-  if (!session) return
-
-  const now = new Date()
-  const overdue = notes.filter(n => 
-    n.type === 'task' && 
-    n.status !== 'done' && 
-    n.reminder_at && 
-    new Date(n.reminder_at) < now
-  )
-
-  if (overdue.length === 0) return
-
-  const tomorrow = new Date(now)
-  tomorrow.setDate(tomorrow.getDate() + 1)
-  tomorrow.setHours(7, 0, 0, 0) // Reporté à 9h le lendemain
-
-  await Promise.all(overdue.map(n =>
-    supabase.from('notes')
-      .update({ reminder_at: tomorrow.toISOString() })
-      .eq('id', n.id)
-  ))
-
-  await fetchNotes()
-}, [session, notes, fetchNotes])
+    if (!session) return
+    const now = new Date()
+    const overdue = notes.filter(n => n.type === 'task' && n.status !== 'done' && n.reminder_at && new Date(n.reminder_at) < now)
+    if (overdue.length === 0) return
+    const tomorrow = new Date(now)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    tomorrow.setHours(7, 0, 0, 0)
+    await Promise.all(overdue.map(n => supabase.from('notes').update({ reminder_at: tomorrow.toISOString() }).eq('id', n.id)))
+    await fetchNotes()
+  }, [session, notes, fetchNotes])
 
  /* ──────────────────── GESTION DES RÉGLAGES PARTAGÉS ──────────────────── */
 
 const fetchSettings = useCallback(async () => {
     if (!session) return
-    const { data, error } = await supabase.from('user_settings').select('*').limit(1) 
+    const { data, error } = await supabase.from('user_settings').select('*').limit(1)
+    if (error) {
+      console.error("Erreur réglages:", error.message)
+      return
+    }
     if (data && data.length > 0) {
       const settings = data[0]
-      if (settings.categories) setCategories([...settings.categories].sort((a, b) => a.name.localeCompare(b.name)))
-      if (settings.collaborators) setCollaborators([...settings.collaborators].sort())
+      if (settings.categories && Array.isArray(settings.categories)) {
+        setCategories([...settings.categories].sort((a, b) => a.name.localeCompare(b.name)))
+      }
+      if (settings.collaborators && Array.isArray(settings.collaborators)) {
+        setCollaborators([...settings.collaborators].sort())
+      }
     }
   }, [session])
 
