@@ -1001,17 +1001,32 @@ export default function App() {
 
  /* ──────────────────── GESTION DES RÉGLAGES PARTAGÉS ──────────────────── */
 
-  // 1. Récupérer les réglages (évite le crash de l'écran noir)
   const fetchSettings = useCallback(async () => {
-    if (!session) return
-    const { data } = await supabase.from('user_settings').select('*').limit(1)
+  if (!session) return
+  
+  const { data, error } = await supabase
+    .from('user_settings')
+    .select('*')
+    .limit(1) 
+  
+  if (error) {
+    console.error("Erreur de chargement des réglages:", error.message)
+    return
+  }
+
+  if (data && data.length > 0) {
+    const settings = data[0]
+    console.log("Réglages partagés chargés avec succès")
     
-    if (data && data.length > 0) {
-      const s = data[0]
-      if (s.categories) setCategories([...s.categories].sort((a, b) => a.name.localeCompare(b.name)))
-      if (s.collaborators) setCollaborators([...s.collaborators].sort())
-    }
-  }, [session])
+    if (settings.categories) 
+      setCategories([...settings.categories].sort((a, b) => a.name.localeCompare(b.name)))
+    
+    if (settings.collaborators) 
+      setCollaborators([...settings.collaborators].sort()) 
+  } else {
+    console.warn("Aucun réglage trouvé dans la base de données.")
+  }
+}, [session])
 
   // 2. Sauvegarder les catégories pour TOUT LE MONDE
   const saveCategories = async (newCats) => {
