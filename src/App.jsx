@@ -969,7 +969,24 @@ export default function App() {
     setNotes(data || []);
   }, [session]);
 
-
+const fetchSettings = useCallback(async () => {
+    if (!session) return
+    const { data, error } = await supabase.from('user_settings').select('*').limit(1)
+    if (error) {
+      console.error("Erreur réglages:", error.message)
+      return
+    }
+    if (data && data.length > 0) {
+      const settings = data[0]
+      if (settings.categories && Array.isArray(settings.categories)) {
+        setCategories([...settings.categories].sort((a, b) => a.name.localeCompare(b.name)))
+      }
+      if (settings.collaborators && Array.isArray(settings.collaborators)) {
+        setCollaborators([...settings.collaborators].sort())
+      }
+    }
+  }, [session])
+  
   // 3. LE LANCEMENT (useEffect)
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -1004,26 +1021,6 @@ const rolloverOverdueTasks = useCallback(async () => {
   await Promise.all(overdue.map(n => supabase.from('notes').update({ reminder_at: tomorrow.toISOString() }).eq('id', n.id)));
   await fetchNotes();
 }, [session, notes, fetchNotes]); //
-
- /* ──────────────────── GESTION DES RÉGLAGES PARTAGÉS ──────────────────── */
-
-const fetchSettings = useCallback(async () => {
-    if (!session) return
-    const { data, error } = await supabase.from('user_settings').select('*').limit(1)
-    if (error) {
-      console.error("Erreur réglages:", error.message)
-      return
-    }
-    if (data && data.length > 0) {
-      const settings = data[0]
-      if (settings.categories && Array.isArray(settings.categories)) {
-        setCategories([...settings.categories].sort((a, b) => a.name.localeCompare(b.name)))
-      }
-      if (settings.collaborators && Array.isArray(settings.collaborators)) {
-        setCollaborators([...settings.collaborators].sort())
-      }
-    }
-  }, [session])
 
   const saveCategories = async (newCats) => {
     const sorted = [...newCats].sort((a, b) => a.name.localeCompare(b.name))
