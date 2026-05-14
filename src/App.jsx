@@ -964,45 +964,44 @@ export default function App() {
 
   // 2. LES OUTILS (Fonctions)
   const fetchNotes = useCallback(async () => {
-    if (!session) return[cite: 131];
-    const { data } = await supabase.from('notes').select('*').order('importance').order('created_at', { ascending: false })[cite: 131];
-    setNotes(data || [])[cite: 131];
+    if (!session) return;
+    const { data } = await supabase.from('notes').select('*').order('importance').order('created_at', { ascending: false });
+    setNotes(data || []);
   }, [session]);
 
   const fetchSettings = useCallback(async () => {
-    if (!session) return[cite: 135];
-    const { data, error } = await supabase.from('user_settings').select('*').limit(1)[cite: 135];
-    if (error) return[cite: 135];
+    if (!session) return;
+    const { data, error } = await supabase.from('user_settings').select('*').limit(1);
+    if (error) return;
     if (data && data.length > 0) {
-      const settings = data[0][cite: 135];
-      if (settings.categories) setCategories([...settings.categories].sort((a, b) => a.name.localeCompare(b.name)))[cite: 135];
-      if (settings.collaborators) setCollaborators([...settings.collaborators].sort())[cite: 135];
+      const settings = data[0];
+      if (settings.categories) setCategories([...settings.categories].sort((a, b) => a.name.localeCompare(b.name)));
+      if (settings.collaborators) setCollaborators([...settings.collaborators].sort());
     }
   }, [session]);
 
   // 3. LE LANCEMENT (useEffect)
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)[cite: 132];
-      setLoading(false)[cite: 132];
+      setSession(session);
+      setLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
-      setSession(s)[cite: 132];
+      setSession(s);
       if (s) {
-        fetchNotes()[cite: 132];
-        fetchSettings()[cite: 132];
+        fetchNotes();
+        fetchSettings();
       }
     });
 
-    return () => subscription.unsubscribe()[cite: 133];
+    return () => subscription.unsubscribe();
   }, [fetchNotes, fetchSettings]);
 
-  // 4. LES AUTRES FONCTIONS
   const rolloverOverdueTasks = useCallback(async () => {
-    if (!session) return
-    const now = new Date()
-    const overdue = notes.filter(n => n.type === 'task' && n.status !== 'done' && n.reminder_at && new Date(n.reminder_at) < now)
+    if (!session) return;
+    const now = new Date();
+    const overdue = notes.filter(n => n.type === 'task' && n.status !== 'done' && n.reminder
     if (overdue.length === 0) return
     const tomorrow = new Date(now)
     tomorrow.setDate(tomorrow.getDate() + 1)
