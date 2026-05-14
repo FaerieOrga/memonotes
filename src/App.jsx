@@ -1053,15 +1053,16 @@ const fetchSettings = useCallback(async () => {
   }
   
   const saveNote = async (payload) => {
-  const { id, type, status, assignee, ...dataToSave } = payload;
-  
+  // Correction ici : on récupère "assignees" avec un "s"
+  const { id, type, status, assignees, ...dataToSave } = payload; 
+
   if (id) {
     await supabase.from('notes')
       .update({ 
         ...dataToSave, 
         type, 
-        status,    // Ajoute bien ça
-        assignee,  // Et ça
+        status,
+        assignees, // Correction ici aussi
         updated_at: new Date().toISOString() 
       })
       .eq('id', id);
@@ -1070,8 +1071,8 @@ const fetchSettings = useCallback(async () => {
       .insert({ 
         ...dataToSave, 
         type, 
-        status,    // Et ici aussi
-        assignee, 
+        status,
+        assignees, // Et ici
         user_id: session.user.id 
       });
   }
