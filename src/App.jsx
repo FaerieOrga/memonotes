@@ -1014,31 +1014,20 @@ export default function App() {
 
  /* ──────────────────── GESTION DES RÉGLAGES PARTAGÉS ──────────────────── */
 
- const fetchSettings = useCallback(async () => {
-    if (!session) return
-    console.log("Tentative de récupération des réglages...")
+const fetchSettings = useCallback(async () => {
+  if (!session) return
+  // On cherche les réglages de l'utilisateur connecté
+  const { data, error } = await supabase
+    .from('user_settings')
+    .select('*')
+    .eq('user_id', session.user.id) // Ajoute ce filtre !
+    .single() 
     
-    const { data, error } = await supabase
-      .from('user_settings')
-      .select('*')
-      .limit(1) 
-    
-    if (error) {
-      console.error("Erreur Supabase réglages:", error.message)
-      return
-    }
-
-    if (data && data.length > 0) {
-      const settings = data[0]
-      if (settings.categories) {
-        setCategories([...settings.categories].sort((a, b) => a.name.localeCompare(b.name)))
-      }
-      if (settings.collaborators) {
-        setCollaborators([...settings.collaborators].sort())
-      }
-      console.log("Réglages chargés avec succès !")
-    }
-  }, [session])
+  if (data) {
+    if (settings.categories) setCategories([...data.categories].sort((a, b) => a.name.localeCompare(b.name)))
+    if (settings.collaborators) setCollaborators([...data.collaborators].sort())
+  }
+}, [session])
 
   const saveCategories = async (newCats) => {
     const sorted = [...newCats].sort((a, b) => a.name.localeCompare(b.name))
