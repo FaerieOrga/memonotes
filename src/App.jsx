@@ -999,35 +999,48 @@ export default function App() {
   await fetchNotes()
 }, [session, notes, fetchNotes])
 
- const fetchSettings = useCallback(async () => {
-  if (!session) return
-  // On récupère TOUS les réglages disponibles sans filtrer par utilisateur
-  const { data, error } = await supabase
-    .from('user_settings')
-    .select('*')
-    .limit(1) // On en prend un seul, peu importe lequel
-  
-  if (data && data.length > 0) {
-    const settings = data[0] // On utilise le premier réglage trouvé dans la base
+ /* ──────────────────── GESTION DES RÉGLAGES PARTAGÉS ──────────────────── */
+
+  // 1. Récupérer les réglages (évite le crash de l'écran noir)
+  const fetchSettings = useCallback(async () => {
+    if (!session) return
+    const { data } = await supabase.from('user_settings').select('*').limit(1)
     
-    if (settings.categories) 
-      setCategories([...settings.categories].sort((a, b) => a.name.localeCompare(b.name)))
+    if (data && data.length > 0) {
+      const s = data[0]
+      if (s.categories) setCategories([...s.categories].sort((a, b) => a.name.localeCompare(b.name)))
+      if (s.collaborators) setCollaborators([...s.collaborators].sort())
+    }
+  }, [session])
+
+  // 2. Sauvegarder les catégories pour TOUT LE MONDE
+  const saveCategories = async (newCats) => {
+    const sorted = [...newCats].sort((a, b) => a.name.localeCompare(b.name))
+    setCategories(sorted)
     
-    if (settings.collaborators) 
-      setCollaborators([...settings.collaborators].sort()) 
+    // On cherche s'il existe déjà une ligne de réglages
+    const { data } = await supabase.from('user_settings').select('id').limit(1)
+    const existingId = data && data[0] ? data[0].id : null
+
+    await supabase.from('user_settings').upsert({
+      ...(existingId ? { id: existingId } : { user_id: session.user.id }),
+      categories: sorted
+    })
   }
-}, [session])
 
-  
- const saveCollaborators = async (newCollabs) => {
-  const sorted = [...newCollabs].sort(); // Tri par ordre alphabétique
-  setCollaborators(sorted);
-  await supabase.from('user_settings').upsert({ 
-    user_id: session.user.id, 
-    collaborators: sorted 
-  });
-};
+  // 3. Sauvegarder l'équipe pour TOUT LE MONDE
+  const saveCollaborators = async (newCollabs) => {
+    const sorted = [...newCollabs].sort()
+    setCollaborators(sorted)
 
+    const { data } = await supabase.from('user_settings').select('id').limit(1)
+    const existingId = data && data[0] ? data[0].id : null
+
+    await supabase.from('user_settings').upsert({
+      ...(existingId ? { id: existingId } : { user_id: session.user.id }),
+      collaborators: sorted
+    })
+  }
   const saveNote = async (payload) => {
   const { id, type, status, assignee, ...dataToSave } = payload;
   
