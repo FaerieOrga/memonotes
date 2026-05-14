@@ -967,6 +967,14 @@ export default function App() {
     return () => subscription.unsubscribe()
   }, [])
 
+  // DÉCLENCHEUR DE CHARGEMENT
+  useEffect(() => {
+    if (session) {
+      fetchNotes();
+      fetchSettings();
+    }
+  }, [session, fetchNotes, fetchSettings]);
+
   const fetchNotes = useCallback(async () => {
     if (!session) return
     const {data} = await supabase.from('notes').select('*').order('importance').order('created_at',{ascending:false})
