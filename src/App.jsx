@@ -231,7 +231,7 @@ function AuthScreen({ onAuth }) { // On a remis le nom AuthScreen et onAuth
     else alert('Vérifie tes e-mails pour confirmer ton inscription !')
     setLoading(false)
   }
-
+}
   return (
     <div style={{...s.overlay, background:'#f8f6f1'}}>
       <form onSubmit={handleAuth} style={{...s.modal, maxWidth:360, padding:30}}>
