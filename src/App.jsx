@@ -210,19 +210,27 @@ function AuthScreen({ onAuth }) { // On a remis le nom AuthScreen et onAuth
       setLoading(false) // On arrête le chargement seulement s'il y a une erreur
     }
     // Si ça marche, on ne fait RIEN. L'app va basculer toute seule grâce à l'écouteur Supabase.
-  } else {
+ } else {
     // INSCRIPTION (on garde ta sécurité de mot de passe)
     if (password !== confirmPassword) {
       alert("Les mots de passe ne correspondent pas !")
       setLoading(false)
       return
     }
-    const { error } = await supabase.auth.signUp({ email, password })
+    
+    // CORRECTION ICI : Ajout de l'URL de redirection
+    const { error } = await supabase.auth.signUp({ 
+      email, 
+      password,
+      options: {
+        emailRedirectTo: 'https://faerieorga.github.io/memonotes/' 
+      }
+    })
+    
     if (error) alert(error.message)
     else alert('Vérifie tes e-mails pour confirmer ton inscription !')
     setLoading(false)
   }
-}
 
   return (
     <div style={{...s.overlay, background:'#f8f6f1'}}>
