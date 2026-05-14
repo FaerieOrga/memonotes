@@ -1108,7 +1108,7 @@ const getCatCount = (catId) => {
   return (
     <div style={s.app}>
       <header style={s.header}>
-        <h1 style={s.logo}>Mémo</h1>
+        <h1 style={s.logo}>Mémo Faérie</h1>
         
      <nav style={s.nav}>
   {[
