@@ -962,10 +962,23 @@ export default function App() {
   const [filterAssignee, setFilterAssignee] = useState(null);
   
   useEffect(() => {
-    supabase.auth.getSession().then(({data:{session}}) => { setSession(session); setLoading(false) })
-    const {data:{subscription}} = supabase.auth.onAuthStateChange((_e,s) => setSession(s))
+    // 1. On écoute la session
+    supabase.auth.getSession().then(({data:{session}}) => { 
+      setSession(session)
+      setLoading(false) 
+    })
+
+    const {data:{subscription}} = supabase.auth.onAuthStateChange((_e,s) => {
+      setSession(s)
+      if (s) {
+        // 2. Dès qu'on est sûr d'avoir un utilisateur, on lance les chargements
+        fetchNotes()
+        fetchSettings()
+      }
+    })
+
     return () => subscription.unsubscribe()
-  }, [])
+  }, [fetchNotes, fetchSettings])
 
   const fetchNotes = useCallback(async () => {
     if (!session) return
@@ -1001,40 +1014,31 @@ export default function App() {
 
  /* ──────────────────── GESTION DES RÉGLAGES PARTAGÉS ──────────────────── */
 
-  const fetchSettings = useCallback(async () => {
-  if (!session) return
-
-    // DÉCLENCHEUR DE CHARGEMENT
-  useEffect(() => {
-    if (session) {
-      fetchNotes();
-      fetchSettings();
+ const fetchSettings = useCallback(async () => {
+    if (!session) return
+    console.log("Tentative de récupération des réglages...")
+    
+    const { data, error } = await supabase
+      .from('user_settings')
+      .select('*')
+      .limit(1) 
+    
+    if (error) {
+      console.error("Erreur Supabase réglages:", error.message)
+      return
     }
-  }, [session, fetchNotes, fetchSettings]);
-  
-  const { data, error } = await supabase
-    .from('user_settings')
-    .select('*')
-    .limit(1) 
-  
-  if (error) {
-    console.error("Erreur de chargement des réglages:", error.message)
-    return
-  }
 
-  if (data && data.length > 0) {
-    const settings = data[0]
-    console.log("Réglages partagés chargés avec succès")
-    
-    if (settings.categories) 
-      setCategories([...settings.categories].sort((a, b) => a.name.localeCompare(b.name)))
-    
-    if (settings.collaborators) 
-      setCollaborators([...settings.collaborators].sort()) 
-  } else {
-    console.warn("Aucun réglage trouvé dans la base de données.")
-  }
-}, [session])
+    if (data && data.length > 0) {
+      const settings = data[0]
+      if (settings.categories) {
+        setCategories([...settings.categories].sort((a, b) => a.name.localeCompare(b.name)))
+      }
+      if (settings.collaborators) {
+        setCollaborators([...settings.collaborators].sort())
+      }
+      console.log("Réglages chargés avec succès !")
+    }
+  }, [session])
 
   const saveCategories = async (newCats) => {
     const sorted = [...newCats].sort((a, b) => a.name.localeCompare(b.name))
