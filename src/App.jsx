@@ -1492,5 +1492,5 @@ logo: {
     color: '#c9a84c',
     marginTop: 4,
     opacity: 0.7
-  },
+  };
 };
