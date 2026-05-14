@@ -1024,9 +1024,9 @@ const fetchSettings = useCallback(async () => {
     .single() 
     
   if (data) {
-    if (settings.categories) setCategories([...data.categories].sort((a, b) => a.name.localeCompare(b.name)))
-    if (settings.collaborators) setCollaborators([...data.collaborators].sort())
-  }
+    if (settings.categories && Array.isArray(settings.categories)) {
+  setCategories([...settings.categories].sort((a, b) => a.name.localeCompare(b.name)));
+}
 }, [session])
 
   const saveCategories = async (newCats) => {
