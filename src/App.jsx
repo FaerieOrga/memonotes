@@ -1001,19 +1001,21 @@ export default function App() {
 
  const fetchSettings = useCallback(async () => {
   if (!session) return
-  // On enlève le .eq('user_id', session.user.id) pour charger les réglages partagés
-  const { data } = await supabase
+  // On récupère TOUS les réglages disponibles sans filtrer par utilisateur
+  const { data, error } = await supabase
     .from('user_settings')
     .select('*')
-    // On ne filtre plus par utilisateur !
-    .limit(1) 
-    .single()
+    .limit(1) // On en prend un seul, peu importe lequel
   
-  if (data?.categories) 
-    setCategories([...data.categories].sort((a, b) => a.name.localeCompare(b.name)))
-  
-  if (data?.collaborators) 
-    setCollaborators([...data.collaborators].sort()) 
+  if (data && data.length > 0) {
+    const settings = data[0] // On utilise le premier réglage trouvé dans la base
+    
+    if (settings.categories) 
+      setCategories([...settings.categories].sort((a, b) => a.name.localeCompare(b.name)))
+    
+    if (settings.collaborators) 
+      setCollaborators([...settings.collaborators].sort()) 
+  }
 }, [session])
 
   
