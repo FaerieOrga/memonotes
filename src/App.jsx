@@ -964,31 +964,41 @@ export default function App() {
 
   // 2. LES OUTILS (Fonctions)
   const fetchNotes = useCallback(async () => {
-    if (!session) return
-    const { data } = await supabase.from('notes').select('*').order('importance').order('created_at', { ascending: false })
-    setNotes(data || [])
+    if (!session) return[cite: 131];
+    const { data } = await supabase.from('notes').select('*').order('importance').order('created_at', { ascending: false })[cite: 131];
+    setNotes(data || [])[cite: 131];
   }, [session]);
 
- // 3. LE LANCEMENT (useEffect)
+  const fetchSettings = useCallback(async () => {
+    if (!session) return[cite: 135];
+    const { data, error } = await supabase.from('user_settings').select('*').limit(1)[cite: 135];
+    if (error) return[cite: 135];
+    if (data && data.length > 0) {
+      const settings = data[0][cite: 135];
+      if (settings.categories) setCategories([...settings.categories].sort((a, b) => a.name.localeCompare(b.name)))[cite: 135];
+      if (settings.collaborators) setCollaborators([...settings.collaborators].sort())[cite: 135];
+    }
+  }, [session]);
+
+  // 3. LE LANCEMENT (useEffect)
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
+      setSession(session)[cite: 132];
+      setLoading(false)[cite: 132];
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
-      setSession(s);
+      setSession(s)[cite: 132];
       if (s) {
-        fetchNotes();
-        fetchSettings();
+        fetchNotes()[cite: 132];
+        fetchSettings()[cite: 132];
       }
     });
 
-    // NETTOYAGE : On retourne la fonction de désinscription
-    return () => subscription.unsubscribe(); 
+    return () => subscription.unsubscribe()[cite: 133];
+  }, [fetchNotes, fetchSettings]);
 
-  }, [fetchNotes, fetchSettings]); // Fermeture unique du useEffect ici
-
+  // 4. LES AUTRES FONCTIONS
   const rolloverOverdueTasks = useCallback(async () => {
     if (!session) return
     const now = new Date()
