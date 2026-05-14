@@ -978,14 +978,14 @@ export default function App() {
       }
     })
     return () => subscription.unsubscribe()
-  }, [fetchNotes, fetchSettings])
+  }, [fetchNotes, fetchSettings]);
 
   // 2. LES OUTILS (Fonctions)
   const fetchNotes = useCallback(async () => {
     if (!session) return
     const { data } = await supabase.from('notes').select('*').order('importance').order('created_at', { ascending: false })
     setNotes(data || [])
-  }, [session])
+  }, [session]);
 
   const rolloverOverdueTasks = useCallback(async () => {
     if (!session) return
