@@ -969,23 +969,25 @@ export default function App() {
     setNotes(data || [])
   }, [session]);
 
-   // 3. LE LANCEMENT (useEffect) - TOUJOURS APRÈS LES OUTILS
-useEffect(() => {
-  supabase.auth.getSession().then(({ data: { session } }) => {
-    setSession(session)
-    setLoading(false)
-  })
+ // 3. LE LANCEMENT (useEffect)
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setLoading(false);
+    });
 
-  const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
-    setSession(s)
-    if (s) {
-      fetchNotes()
-      fetchSettings()
-    }
-  })
-  return () => subscription.unsubscribe()
-}, [fetchNotes, fetchSettings]);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
+      setSession(s);
+      if (s) {
+        fetchNotes();
+        fetchSettings();
+      }
+    });
 
+    // NETTOYAGE : On retourne la fonction de désinscription
+    return () => subscription.unsubscribe(); 
+
+  }, [fetchNotes, fetchSettings]); // Fermeture unique du useEffect ici
 
   const rolloverOverdueTasks = useCallback(async () => {
     if (!session) return
