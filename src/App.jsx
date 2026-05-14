@@ -961,6 +961,14 @@ export default function App() {
   const [showWaiting, setShowWaiting] = useState(false)
   const [collaborators, setCollaborators] = useState([])
   const [filterAssignee, setFilterAssignee] = useState(null)
+
+  // 2. LES OUTILS (Fonctions)
+  const fetchNotes = useCallback(async () => {
+    if (!session) return
+    const { data } = await supabase.from('notes').select('*').order('importance').order('created_at', { ascending: false })
+    setNotes(data || [])
+  }, [session]);
+
   
  useEffect(() => {
    // 3. LE LANCEMENT (useEffect) - TOUJOURS APRÈS LES OUTILS
@@ -980,12 +988,6 @@ export default function App() {
     return () => subscription.unsubscribe()
   }, [fetchNotes, fetchSettings]);
 
-  // 2. LES OUTILS (Fonctions)
-  const fetchNotes = useCallback(async () => {
-    if (!session) return
-    const { data } = await supabase.from('notes').select('*').order('importance').order('created_at', { ascending: false })
-    setNotes(data || [])
-  }, [session]);
 
   const rolloverOverdueTasks = useCallback(async () => {
     if (!session) return
