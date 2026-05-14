@@ -1305,8 +1305,8 @@ const getCatCount = (catId) => {
         />
       )}
     </div>
-  )
-}
+  );
+} // <--- IL MANQUAIT CETTE ACCOLADE POUR FERMER LA FONCTION App()
 
 const s = {
   app: {
