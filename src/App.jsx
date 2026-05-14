@@ -969,8 +969,6 @@ export default function App() {
     setNotes(data || [])
   }, [session]);
 
-  
- useEffect(() => {
    // 3. LE LANCEMENT (useEffect) - TOUJOURS APRÈS LES OUTILS
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
