@@ -946,6 +946,7 @@ function SettingsView({ session, categories, onCategoriesChange, collaborators, 
 
 /* ──────────────────── MAIN APP ──────────────────── */
 export default function App() {
+  console.log("L'application démarre !");
   const [session, setSession]       = useState(null)
   const [loading, setLoading]       = useState(true)
   const [notes, setNotes]           = useState([])
@@ -1017,26 +1018,28 @@ export default function App() {
 const fetchSettings = useCallback(async () => {
     if (!session) return;
     
+    // On récupère la première ligne de réglages disponible (puisque RLS est désactivé)
     const { data, error } = await supabase
       .from('user_settings')
       .select('*')
-      .eq('user_id', session.user.id) // Filtre essentiel pour charger tes propres réglages
-      .maybeSingle(); 
-
+      .limit(1);
+    
     if (error) {
-      console.error("Erreur réglages:", error.message);
+      console.error("Erreur Supabase réglages:", error.message);
       return;
     }
 
-    if (data) {
-      if (data.categories && Array.isArray(data.categories)) {
-        setCategories([...data.categories].sort((a, b) => a.name.localeCompare(b.name)));
+    if (data && data.length > 0) {
+      const settings = data[0];
+      // Vérification de sécurité : on ne "spread" que si c'est un tableau valide
+      if (settings.categories && Array.isArray(settings.categories)) {
+        setCategories([...settings.categories].sort((a, b) => a.name.localeCompare(b.name)));
       }
-      if (data.collaborators && Array.isArray(data.collaborators)) {
-        setCollaborators([...data.collaborators].sort());
+      if (settings.collaborators && Array.isArray(settings.collaborators)) {
+        setCollaborators([...settings.collaborators].sort());
       }
     }
-  }, [session]); // Cette ligne correspond à ta ligne 1030 qui posait problème
+  }, [session]); 
 
   const saveCategories = async (newCats) => {
     const sorted = [...newCats].sort((a, b) => a.name.localeCompare(b.name))
