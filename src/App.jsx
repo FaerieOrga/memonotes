@@ -970,40 +970,22 @@ export default function App() {
   }, [session]);
 
 const fetchSettings = useCallback(async () => {
-    if (!session) return
-    const { data, error } = await supabase.from('user_settings').select('*').limit(1)
-    if (error) {
-      console.error("Erreur réglages:", error.message)
-      return
-    }
-    if (data && data.length > 0) {
-      const settings = data[0]
-      if (settings.categories && Array.isArray(settings.categories)) {
-        setCategories([...settings.categories].sort((a, b) => a.name.localeCompare(b.name)))
-      }
-      if (settings.collaborators && Array.isArray(settings.collaborators)) {
-        setCollaborators([...settings.collaborators].sort())
-      }
-    }
-  }, [session])
+  if (!session) return
+  const { data } = await supabase.from('user_settings').select('*').limit(1).single()
+  if (data?.categories) setCategories([...data.categories].sort((a, b) => a.name.localeCompare(b.name)))
+  if (data?.collaborators) setCollaborators([...data.collaborators].sort())
+}, [session])
   
-  // 3. LE LANCEMENT (useEffect)
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-    });
+ useEffect(() => {
+  supabase.auth.getSession().then(({ data: { session } }) => { setSession(session); setLoading(false) })
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setSession(s))
+  return () => subscription.unsubscribe()
+}, [])
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => {
-      setSession(s);
-      if (s) {
-        fetchNotes();
-        fetchSettings();
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [fetchNotes, fetchSettings]);
+useEffect(() => {
+  fetchNotes().then(() => rolloverOverdueTasks())
+  fetchSettings()
+}, [fetchNotes, fetchSettings, rolloverOverdueTasks])
 
 const rolloverOverdueTasks = useCallback(async () => {
   if (!session) return;
@@ -1022,32 +1004,19 @@ const rolloverOverdueTasks = useCallback(async () => {
   await fetchNotes();
 }, [session, notes, fetchNotes]); //
 
-  const saveCategories = async (newCats) => {
-    const sorted = [...newCats].sort((a, b) => a.name.localeCompare(b.name))
-    setCategories(sorted)
-    
-    // On cherche la ligne existante pour ne pas en créer une deuxième
-    const { data } = await supabase.from('user_settings').select('id').limit(1)
-    const existingId = data && data[0] ? data[0].id : null
+const saveCategories = async (newCats) => {
+  const sorted = [...newCats].sort((a, b) => a.name.localeCompare(b.name))
+  setCategories(sorted)
+  const { data } = await supabase.from('user_settings').select('user_id').limit(1).single()
+  if (data) await supabase.from('user_settings').upsert({ user_id: data.user_id, categories: sorted })
+}
 
-    await supabase.from('user_settings').upsert({
-      ...(existingId ? { id: existingId } : { user_id: session.user.id }),
-      categories: sorted
-    })
-  }
-
-  const saveCollaborators = async (newCollabs) => {
-    const sorted = [...newCollabs].sort()
-    setCollaborators(sorted)
-
-    const { data } = await supabase.from('user_settings').select('id').limit(1)
-    const existingId = data && data[0] ? data[0].id : null
-
-    await supabase.from('user_settings').upsert({
-      ...(existingId ? { id: existingId } : { user_id: session.user.id }),
-      collaborators: sorted
-    })
-  }
+const saveCollaborators = async (newCollabs) => {
+  const sorted = [...newCollabs].sort()
+  setCollaborators(sorted)
+  const { data } = await supabase.from('user_settings').select('user_id').limit(1).single()
+  if (data) await supabase.from('user_settings').upsert({ user_id: data.user_id, collaborators: sorted })
+}
   
   const saveNote = async (payload) => {
   // Correction ici : on récupère "assignees" avec un "s"
