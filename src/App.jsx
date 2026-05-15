@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { supabase } from './lib/supabase'
+import { supabase } from './lib/supabase' 
 
 const VAPID_PUBLIC_KEY = 'BAurdkv0qAKxkuzAq448zYqL5BuOjxWjBkXANNBAh7nDGho7UUsFgfu9TUyc4zg_vsZ4ggW3PVvK6Z_ZiTsNmXs'
 
