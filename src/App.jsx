@@ -975,19 +975,8 @@ const fetchSettings = useCallback(async () => {
   if (data?.categories) setCategories([...data.categories].sort((a, b) => a.name.localeCompare(b.name)))
   if (data?.collaborators) setCollaborators([...data.collaborators].sort())
 }, [session])
-  
- useEffect(() => {
-  supabase.auth.getSession().then(({ data: { session } }) => { setSession(session); setLoading(false) })
-  const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setSession(s))
-  return () => subscription.unsubscribe()
-}, [])
 
-useEffect(() => {
-  fetchNotes().then(() => rolloverOverdueTasks())
-  fetchSettings()
-}, [fetchNotes, fetchSettings, rolloverOverdueTasks])
-
-const rolloverOverdueTasks = useCallback(async () => {
+  const rolloverOverdueTasks = useCallback(async () => {
   if (!session) return;
   const now = new Date();
   
@@ -1002,7 +991,19 @@ const rolloverOverdueTasks = useCallback(async () => {
   
   await Promise.all(overdue.map(n => supabase.from('notes').update({ reminder_at: tomorrow.toISOString() }).eq('id', n.id)));
   await fetchNotes();
-}, [session, notes, fetchNotes]); //
+}, [session, notes, fetchNotes]);
+  
+ useEffect(() => {
+  supabase.auth.getSession().then(({ data: { session } }) => { setSession(session); setLoading(false) })
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setSession(s))
+  return () => subscription.unsubscribe()
+}, [])
+
+useEffect(() => {
+  fetchNotes().then(() => rolloverOverdueTasks())
+  fetchSettings()
+}, [fetchNotes, fetchSettings, rolloverOverdueTasks])
+
 
 const saveCategories = async (newCats) => {
   const sorted = [...newCats].sort((a, b) => a.name.localeCompare(b.name))
