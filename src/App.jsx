@@ -1422,7 +1422,7 @@ logo: {
   modalFooter: {display:'flex',justifyContent:'flex-end',gap:10,padding:18,borderTop:'1px solid #f0ece3'},
   label:        {fontSize:11,fontWeight:600,color:'#9a8f7a',letterSpacing:'0.5px',textTransform:'uppercase'},
   input:        {background:'#f8f6f1',border:'1px solid #e5e0d5',borderRadius:8,color:'#1a1208',padding:'9px 12px',fontSize:16,width:'100%',fontFamily:'inherit'},
-  textarea:     {resize:'vertical',minHeight:180},
+  textarea:     {resize:'vertical',minHeight:400},
   quadGrid:     {display:'grid',gridTemplateColumns:'1fr 1fr',gap:8},
   quadBtn:      {background:'#f8f6f1',border:'2px solid',borderRadius:10,padding:'10px 8px',cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',gap:4,textAlign:'center',fontFamily:'inherit'},
   notifRow:     {display:'flex',gap:20},
