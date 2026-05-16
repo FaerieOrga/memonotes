@@ -435,7 +435,7 @@ function NoteCard({ note, categories, onEdit, onDelete }) {
             </span>
         </div>
       )}
-      <div style={{...s.cardBody, background: pastelBg, transition: '0.3s'}}>
+      <div style={{...s.cardBody, background: pastelBg, transition: '0.3s', cursor: 'pointer'}} onClick={() => onEdit(note)}>
         <h3 style={s.cardTitle}>{note.title}</h3>
         
         {/* DATE DE CRÉATION (Plus lisible) */}
@@ -473,8 +473,7 @@ function NoteCard({ note, categories, onEdit, onDelete }) {
           )}
           
           <div style={{...s.cardActions, marginLeft: 'auto'}}>
-            <button style={s.iconBtn} onClick={() => onEdit(note)}>✏️</button>
-            <button style={s.iconBtn} onClick={() => onDelete(note.id)}>🗑️</button>
+           <button style={s.iconBtn} onClick={(e) => { e.stopPropagation(); onDelete(note.id); }}>🗑️</button>
           </div>
         </div>
       </div>
