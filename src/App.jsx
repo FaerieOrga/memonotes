@@ -1004,19 +1004,22 @@ useEffect(() => {
   fetchSettings()
 }, [fetchNotes, fetchSettings, rolloverOverdueTasks])
 
-
 const saveCategories = async (newCats) => {
   const sorted = [...newCats].sort((a, b) => a.name.localeCompare(b.name))
   setCategories(sorted)
-  const { data } = await supabase.from('user_settings').select('user_id').limit(1).single()
-  if (data) await supabase.from('user_settings').upsert({ user_id: data.user_id, categories: sorted })
+  await supabase.from('user_settings').upsert(
+    { user_id: session.user.id, categories: sorted },
+    { onConflict: 'user_id' }
+  )
 }
 
 const saveCollaborators = async (newCollabs) => {
   const sorted = [...newCollabs].sort()
   setCollaborators(sorted)
-  const { data } = await supabase.from('user_settings').select('user_id').limit(1).single()
-  if (data) await supabase.from('user_settings').upsert({ user_id: data.user_id, collaborators: sorted })
+  await supabase.from('user_settings').upsert(
+    { user_id: session.user.id, collaborators: sorted },
+    { onConflict: 'user_id' }
+  )
 }
   
   const saveNote = async (payload) => {
