@@ -590,25 +590,30 @@ useEffect(() => {
             </div>
           )}
 
-          <div style={{marginBottom: 12}}>
-            <label style={s.label}>Qui ?</label>
-            <div style={{...s.input, minHeight: 40, padding: '8px 10px', background: '#f8f6f1'}}>
-              {collaborators && collaborators.map(name => (
-                <label key={name} style={{display:'flex', alignItems:'center', gap:8, fontSize:13, marginBottom:4, cursor:'pointer', color:'#1a1208'}}>
-                  <input 
-                    type="checkbox" 
-                    checked={assignees.includes(name)}
-                    onChange={(e) => {
-                      if(e.target.checked) setAssignees([...assignees, name])
-                      else setAssignees(assignees.filter(n => n !== name))
-                    }}
-                  />
-                  {name}
-                </label>
-              ))}
-              {(!collaborators || collaborators.length === 0) && <span style={{fontSize:12, color:'#9a8f7a'}}>Aucun collaborateur créé</span>}
-            </div>
-          </div>
+        <div style={{marginBottom: 12}}>
+  <label style={s.label}>Qui ?</label>
+  <div style={{...s.input, minHeight: 40, padding: '8px 10px', background: '#f8f6f1'}}>
+    {[...new Set([...(collaborators || []), ...assignees])].map(name => (
+      <label key={name} style={{display:'flex', alignItems:'center', gap:8, fontSize:13, marginBottom:4, cursor:'pointer', color:'#1a1208'}}>
+        <input 
+          type="checkbox" 
+          checked={assignees.includes(name)}
+          onChange={(e) => {
+            if(e.target.checked) setAssignees([...assignees, name])
+            else setAssignees(assignees.filter(n => n !== name))
+          }}
+        />
+        {name}
+        {!(collaborators || []).includes(name) && (
+          <span style={{fontSize:10, color:'#9a8f7a'}}>(retiré)</span>
+        )}
+      </label>
+    ))}
+    {(!collaborators || collaborators.length === 0) && assignees.length === 0 && (
+      <span style={{fontSize:12, color:'#9a8f7a'}}>Aucun collaborateur créé</span>
+    )}
+  </div>
+</div>
 
           <label style={s.label}>Catégories</label>
           <CatDropdown categories={categories} selected={cats} onChange={setCats} onNewCategory={onNewCategory} />
