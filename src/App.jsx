@@ -989,16 +989,20 @@ export default function App() {
 
 const fetchSettings = useCallback(async () => {
   if (!session) return
-  const { data } = await supabase.from('user_settings').select('*').limit(1).single()
+  const { data } = await supabase
+    .from('user_settings')
+    .select('*')
+    .eq('user_id', session.user.id)  // ← filtre sur TON user
+    .single()
   if (data?.categories) {
     const sorted = [...data.categories].sort((a, b) => a.name.localeCompare(b.name))
     setCategories(sorted)
-    categoriesRef.current = sorted  // ← ajout
+    categoriesRef.current = sorted
   }
   if (data?.collaborators) {
     const sorted = [...data.collaborators].sort()
     setCollaborators(sorted)
-    collaboratorsRef.current = sorted  // ← ajout
+    collaboratorsRef.current = sorted
   }
 }, [session])
 
