@@ -977,6 +977,8 @@ export default function App() {
   const [showWaiting, setShowWaiting] = useState(false)
   const [collaborators, setCollaborators] = useState([])
   const [filterAssignee, setFilterAssignee] = useState(null)
+  const categoriesRef = useRef([])
+  const collaboratorsRef = useRef([])
 
   // 2. LES OUTILS (Fonctions)
   const fetchNotes = useCallback(async () => {
@@ -988,8 +990,16 @@ export default function App() {
 const fetchSettings = useCallback(async () => {
   if (!session) return
   const { data } = await supabase.from('user_settings').select('*').limit(1).single()
-  if (data?.categories) setCategories([...data.categories].sort((a, b) => a.name.localeCompare(b.name)))
-  if (data?.collaborators) setCollaborators([...data.collaborators].sort())
+  if (data?.categories) {
+    const sorted = [...data.categories].sort((a, b) => a.name.localeCompare(b.name))
+    setCategories(sorted)
+    categoriesRef.current = sorted  // ← ajout
+  }
+  if (data?.collaborators) {
+    const sorted = [...data.collaborators].sort()
+    setCollaborators(sorted)
+    collaboratorsRef.current = sorted  // ← ajout
+  }
 }, [session])
 
   const rolloverOverdueTasks = useCallback(async () => {
@@ -1023,8 +1033,9 @@ useEffect(() => {
 const saveCategories = async (newCats) => {
   const sorted = [...newCats].sort((a, b) => a.name.localeCompare(b.name))
   setCategories(sorted)
+  categoriesRef.current = sorted
   await supabase.from('user_settings').upsert(
-    { user_id: session.user.id, categories: sorted, collaborators },  // ← ajout de collaborators
+    { user_id: session.user.id, categories: sorted, collaborators: collaboratorsRef.current },
     { onConflict: 'user_id' }
   )
 }
@@ -1032,8 +1043,9 @@ const saveCategories = async (newCats) => {
 const saveCollaborators = async (newCollabs) => {
   const sorted = [...newCollabs].sort()
   setCollaborators(sorted)
+  collaboratorsRef.current = sorted
   await supabase.from('user_settings').upsert(
-    { user_id: session.user.id, collaborators: sorted, categories },  // ← ajout de categories
+    { user_id: session.user.id, collaborators: sorted, categories: categoriesRef.current },
     { onConflict: 'user_id' }
   )
 }
@@ -1297,7 +1309,7 @@ const getCatCount = (catId) => {
       )}
     </div>
   );
-} // <--- IL MANQUAIT CETTE ACCOLADE POUR FERMER LA FONCTION App()
+}
 
 const s = {
   app: {
