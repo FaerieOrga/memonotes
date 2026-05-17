@@ -1034,20 +1034,30 @@ const saveCategories = async (newCats) => {
   const sorted = [...newCats].sort((a, b) => a.name.localeCompare(b.name))
   setCategories(sorted)
   categoriesRef.current = sorted
-  await supabase.from('user_settings').upsert(
+  const { error } = await supabase.from('user_settings').upsert(
     { user_id: session.user.id, categories: sorted, collaborators: collaboratorsRef.current },
     { onConflict: 'user_id' }
   )
+  if (error) {
+    console.error('❌ saveCategories error:', error)
+    alert('Erreur sauvegarde catégories : ' + error.message)
+  }
+  await fetchSettings() // ← rechargement depuis la DB pour confirmer
 }
 
 const saveCollaborators = async (newCollabs) => {
   const sorted = [...newCollabs].sort()
   setCollaborators(sorted)
   collaboratorsRef.current = sorted
-  await supabase.from('user_settings').upsert(
+  const { error } = await supabase.from('user_settings').upsert(
     { user_id: session.user.id, collaborators: sorted, categories: categoriesRef.current },
     { onConflict: 'user_id' }
   )
+  if (error) {
+    console.error('❌ saveCollaborators error:', error)
+    alert('Erreur sauvegarde collaborateurs : ' + error.message)
+  }
+  await fetchSettings() // ← rechargement depuis la DB pour confirmer
 }
   
   const saveNote = async (payload) => {
