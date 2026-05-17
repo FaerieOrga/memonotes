@@ -1366,7 +1366,8 @@ const s = {
     display: 'flex',
     flexDirection: 'column',
     minHeight: '100vh',
-    background: '#f8f6f1',
+    background: 'linear-gradient(180deg, #4b8b9a 0%, #85c2c7 100%)', /* Le nouveau dégradé bleuté */
+    backgroundAttachment: 'fixed', /* Garde le dégradé fixe au scroll */
     touchAction: 'manipulation', 
     overflowX: 'hidden' 
   },
