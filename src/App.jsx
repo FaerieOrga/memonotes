@@ -224,7 +224,7 @@ function AuthScreen({ onAuth }) { // On a remis le nom AuthScreen et onAuth
       email, 
       password,
       options: {
-        emailRedirectTo: 'https://faerieorga.github.io/memonotes/' 
+        emailRedirectTo: 'https://faerieorga.github.io/memonotes/',
         data: { display_name: displayName }
       }
     })
