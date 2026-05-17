@@ -1019,7 +1019,7 @@ const saveCategories = async (newCats) => {
   const sorted = [...newCats].sort((a, b) => a.name.localeCompare(b.name))
   setCategories(sorted)
   await supabase.from('user_settings').upsert(
-    { user_id: session.user.id, categories: sorted },
+    { user_id: session.user.id, categories: sorted, collaborators },  // ← ajout de collaborators
     { onConflict: 'user_id' }
   )
 }
@@ -1028,7 +1028,7 @@ const saveCollaborators = async (newCollabs) => {
   const sorted = [...newCollabs].sort()
   setCollaborators(sorted)
   await supabase.from('user_settings').upsert(
-    { user_id: session.user.id, collaborators: sorted },
+    { user_id: session.user.id, collaborators: sorted, categories },  // ← ajout de categories
     { onConflict: 'user_id' }
   )
 }
