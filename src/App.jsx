@@ -1362,12 +1362,12 @@ const getCatCount = (catId) => {
 }
 
 const s = {
-  app: {
+ app: {
     display: 'flex',
     flexDirection: 'column',
     minHeight: '100vh',
-    background: 'linear-gradient(180deg, #4b8b9a 0%, #85c2c7 100%)', /* Le nouveau dégradé bleuté */
-    backgroundAttachment: 'fixed', /* Garde le dégradé fixe au scroll */
+    background: 'linear-gradient(180deg, #4a8b98 0%, #c4e4e5 100%)', /* Le bas (#c4e4e5) est maintenant beaucoup plus clair ! */
+    backgroundAttachment: 'fixed',
     touchAction: 'manipulation', 
     overflowX: 'hidden' 
   },
