@@ -191,6 +191,7 @@ function DateTimePicker({ value, onChange }) {
 
 /* ──────────────────── AUTH ──────────────────── */
 function AuthScreen({ onAuth }) { // On a remis le nom AuthScreen et onAuth
+  const [displayName, setDisplayName] = useState('')
   const [loading, setLoading] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -224,6 +225,7 @@ function AuthScreen({ onAuth }) { // On a remis le nom AuthScreen et onAuth
       password,
       options: {
         emailRedirectTo: 'https://faerieorga.github.io/memonotes/' 
+        data: { display_name: displayName }
       }
     })
     
@@ -240,6 +242,20 @@ function AuthScreen({ onAuth }) { // On a remis le nom AuthScreen et onAuth
         </h2>
         
         <div style={{display:'flex', flexDirection:'column', gap:15}}>
+
+          {!isLogin && (
+             <div>
+               <label style={s.label}>Ton prénom</label>
+               <input 
+                type="text" 
+               placeholder="Prénom" 
+               style={s.input} 
+               value={displayName} 
+               onChange={e => setDisplayName(e.target.value)} 
+               required 
+                />
+               </div>
+            )}
           <div>
             <label style={s.label}>E-mail</label>
             <input 
@@ -979,6 +995,7 @@ export default function App() {
   const [filterAssignee, setFilterAssignee] = useState(null)
   const categoriesRef = useRef([])
   const collaboratorsRef = useRef([])
+  const settingsIdRef = useRef(null) 
 
   // 2. LES OUTILS (Fonctions)
   const fetchNotes = useCallback(async () => {
@@ -992,17 +1009,20 @@ const fetchSettings = useCallback(async () => {
   const { data } = await supabase
     .from('user_settings')
     .select('*')
-    .eq('user_id', session.user.id)  // ← filtre sur TON user
+    .limit(1)
     .single()
-  if (data?.categories) {
-    const sorted = [...data.categories].sort((a, b) => a.name.localeCompare(b.name))
-    setCategories(sorted)
-    categoriesRef.current = sorted
-  }
-  if (data?.collaborators) {
-    const sorted = [...data.collaborators].sort()
-    setCollaborators(sorted)
-    collaboratorsRef.current = sorted
+  if (data) {
+    settingsIdRef.current = data.id
+    if (data.categories) {
+      const sorted = [...data.categories].sort((a, b) => a.name.localeCompare(b.name))
+      setCategories(sorted)
+      categoriesRef.current = sorted
+    }
+    if (data.collaborators) {
+      const sorted = [...data.collaborators].sort()
+      setCollaborators(sorted)
+      collaboratorsRef.current = sorted
+    }
   }
 }, [session])
 
@@ -1038,60 +1058,38 @@ const saveCategories = async (newCats) => {
   const sorted = [...newCats].sort((a, b) => a.name.localeCompare(b.name))
   setCategories(sorted)
   categoriesRef.current = sorted
-  const { error } = await supabase.from('user_settings').upsert(
-    { user_id: session.user.id, categories: sorted, collaborators: collaboratorsRef.current },
-    { onConflict: 'user_id' }
-  )
-  if (error) {
-    console.error('❌ saveCategories error:', error)
-    alert('Erreur sauvegarde catégories : ' + error.message)
-  }
-  await fetchSettings() // ← rechargement depuis la DB pour confirmer
+  await supabase.from('user_settings')
+    .update({ categories: sorted, collaborators: collaboratorsRef.current })
+    .eq('id', settingsIdRef.current)
+  await fetchSettings()
 }
 
 const saveCollaborators = async (newCollabs) => {
   const sorted = [...newCollabs].sort()
   setCollaborators(sorted)
   collaboratorsRef.current = sorted
-  const { error } = await supabase.from('user_settings').upsert(
-    { user_id: session.user.id, collaborators: sorted, categories: categoriesRef.current },
-    { onConflict: 'user_id' }
-  )
-  if (error) {
-    console.error('❌ saveCollaborators error:', error)
-    alert('Erreur sauvegarde collaborateurs : ' + error.message)
-  }
-  await fetchSettings() // ← rechargement depuis la DB pour confirmer
+  await supabase.from('user_settings')
+    .update({ collaborators: sorted, categories: categoriesRef.current })
+    .eq('id', settingsIdRef.current)
+  await fetchSettings()
 }
 
   
-  const saveNote = async (payload) => {
-  // Correction ici : on récupère "assignees" avec un "s"
-  const { id, type, status, assignees, ...dataToSave } = payload; 
+ const saveNote = async (payload) => {
+  const { id, type, status, assignees, ...dataToSave } = payload
 
   if (id) {
     await supabase.from('notes')
-      .update({ 
-        ...dataToSave, 
-        type, 
-        status,
-        assignees, // Correction ici aussi
-        updated_at: new Date().toISOString() 
-      })
-      .eq('id', id);
+      .update({ ...dataToSave, type, status, assignees, updated_at: new Date().toISOString() })
+      .eq('id', id)
   } else {
     await supabase.from('notes')
-      .insert({ 
-        ...dataToSave, 
-        type, 
-        status,
-        assignees, // Et ici
-        user_id: session.user.id 
-      });
+      .insert({ ...dataToSave, type, status, assignees, user_id: session.user.id, created_by: myName })  // ← ajout
   }
-  await fetchNotes(); 
-  setModal(null);
+  await fetchNotes()
+  setModal(null)
 }
+  
   const deleteNote = async (id) => {
     if (!confirm('Supprimer cette note ?')) return
     await supabase.from('notes').delete().eq('id',id)
@@ -1133,6 +1131,9 @@ const saveCollaborators = async (newCollabs) => {
 const getCatCount = (catId) => {
   return notes.filter(n => (n.cats || []).includes(catId)).length;
 };
+  const myName = session?.user?.user_metadata?.display_name 
+  || session?.user?.email?.split('@')[0] 
+  || 'Inconnu'
   
   return (
     <div style={s.app}>
