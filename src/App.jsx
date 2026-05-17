@@ -841,7 +841,7 @@ function CalendarView({ notes, onEdit }) {
 }
 
 /* ──────────────────── SETTINGS VIEW (COMPLET) ──────────────────── */
-function SettingsView({ session, categories, onCategoriesChange, collaborators, onCollaboratorsChange, onRecoverCollaborators }) {
+function SettingsView({ session, categories, onCategoriesChange, collaborators, onCollaboratorsChange }) {
   const [pushStatus, setPushStatus] = useState('idle')
   const [pushMsg, setPushMsg]       = useState('')
 
@@ -950,11 +950,6 @@ function SettingsView({ session, categories, onCategoriesChange, collaborators, 
           </div>
         ))}
       </div>
-
-      {/* BOUTON RÉCUPÉRATION */}
-      <button style={{...s.btn, marginBottom: 8, background: '#2563eb'}} onClick={onRecoverCollaborators}>
-        🔄 Récupérer les collaborateurs depuis les notes
-      </button>
 
       {/* BOUTON DÉCONNEXION (déjà existant) */}
       <button style={{...s.btnGhost, marginTop: 8}} onClick={() => supabase.auth.signOut()}>
@@ -1069,17 +1064,6 @@ const saveCollaborators = async (newCollabs) => {
   await fetchSettings() // ← rechargement depuis la DB pour confirmer
 }
 
-  const recoverCollaborators = async () => {
-  const { data } = await supabase.from('notes').select('assignees')
-  const allNames = data.flatMap(n => n.assignees || []).filter(Boolean)
-  const unique = [...new Set(allNames)].sort()
-  if (unique.length > 0) {
-    await saveCollaborators(unique)
-    alert(`✅ ${unique.length} collaborateur(s) récupéré(s) : ${unique.join(', ')}`)
-  } else {
-    alert('Aucun collaborateur trouvé dans les notes.')
-  }
-}
   
   const saveNote = async (payload) => {
   // Correction ici : on récupère "assignees" avec un "s"
@@ -1323,7 +1307,6 @@ const getCatCount = (catId) => {
             onCategoriesChange={saveCategories}
             collaborators={collaborators} 
             onCollaboratorsChange={saveCollaborators} 
-             onRecoverCollaborators={recoverCollaborators}  // ← ajout
           />
         )}
       </main>
