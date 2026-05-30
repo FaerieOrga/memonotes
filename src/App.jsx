@@ -1029,19 +1029,25 @@ const fetchSettings = useCallback(async () => {
   const rolloverOverdueTasks = useCallback(async () => {
   if (!session) return;
   const now = new Date();
-  
-  // Correction de la ligne coupée :
-  const overdue = notes.filter(n => n.type === 'task' && n.status !== 'done' && n.reminder_at && new Date(n.reminder_at) < now);
+  const { data: overdue } = await supabase
+    .from('notes')
+    .select('id')
+    .eq('type', 'task')
+    .neq('status', 'done')
+    .not('reminder_at', 'is', null)
+    .lt('reminder_at', now.toISOString())
 
-  if (overdue.length === 0) return;
-  
+  if (!overdue || overdue.length === 0) return;
+
   const tomorrow = new Date(now);
   tomorrow.setDate(tomorrow.getDate() + 1);
   tomorrow.setHours(7, 0, 0, 0);
-  
-  await Promise.all(overdue.map(n => supabase.from('notes').update({ reminder_at: tomorrow.toISOString() }).eq('id', n.id)));
+
+  await Promise.all(overdue.map(n =>
+    supabase.from('notes').update({ reminder_at: tomorrow.toISOString() }).eq('id', n.id)
+  ));
   await fetchNotes();
-}, [session, notes, fetchNotes]);
+}, [session, fetchNotes]);
   
  useEffect(() => {
   supabase.auth.getSession().then(({ data: { session } }) => { setSession(session); setLoading(false) })
