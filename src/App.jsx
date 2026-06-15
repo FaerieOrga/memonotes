@@ -1027,27 +1027,31 @@ const fetchSettings = useCallback(async () => {
 }, [session])
 
   const rolloverOverdueTasks = useCallback(async () => {
-  if (!session) return;
-  const now = new Date();
-  const { data: overdue } = await supabase
+  if (!session) return
+
+  const now = new Date()
+  const { data: currentNotes } = await supabase
     .from('notes')
-    .select('id')
-    .eq('type', 'task')
+    .select('*')
     .neq('status', 'done')
     .not('reminder_at', 'is', null)
     .lt('reminder_at', now.toISOString())
+    .eq('type', 'task')
 
-  if (!overdue || overdue.length === 0) return;
+  if (!currentNotes || currentNotes.length === 0) return
 
-  const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  tomorrow.setHours(7, 0, 0, 0);
+  const tomorrow = new Date(now)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  tomorrow.setHours(7, 0, 0, 0)
 
-  await Promise.all(overdue.map(n =>
-    supabase.from('notes').update({ reminder_at: tomorrow.toISOString() }).eq('id', n.id)
-  ));
-  await fetchNotes();
-}, [session, fetchNotes]);
+  await Promise.all(currentNotes.map(n =>
+    supabase.from('notes')
+      .update({ reminder_at: tomorrow.toISOString() })
+      .eq('id', n.id)
+  ))
+
+  await fetchNotes()
+}, [session, fetchNotes])
   
  useEffect(() => {
   supabase.auth.getSession().then(({ data: { session } }) => { setSession(session); setLoading(false) })
