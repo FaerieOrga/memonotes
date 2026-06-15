@@ -997,72 +997,81 @@ export default function App() {
   const collaboratorsRef = useRef([])
   const settingsIdRef = useRef(null) 
 
-  // 2. LES OUTILS (Fonctions)
+  // Extraction sécurisée de l'ID utilisateur pour bloquer les boucles de rendu
+  const userId = session?.user?.id;
+
+  // 2. LES OUTILS (Fonctions corrigées)
   const fetchNotes = useCallback(async () => {
-    if (!session) return;
+    if (!userId) return;
     const { data } = await supabase.from('notes').select('*').order('importance').order('created_at', { ascending: false });
     setNotes(data || []);
-  }, [session]);
+  }, [userId]);
 
-const fetchSettings = useCallback(async () => {
-  if (!session) return
-  const { data } = await supabase
-    .from('user_settings')
-    .select('*')
-    .limit(1)
-    .single()
-  if (data) {
-    settingsIdRef.current = data.id
-    if (data.categories) {
-      const sorted = [...data.categories].sort((a, b) => a.name.localeCompare(b.name))
-      setCategories(sorted)
-      categoriesRef.current = sorted
+  const fetchSettings = useCallback(async () => {
+    if (!userId) return
+    const { data } = await supabase
+      .from('user_settings')
+      .select('*')
+      .limit(1)
+      .single()
+    if (data) {
+      settingsIdRef.current = data.id
+      if (data.categories) {
+        const sorted = [...data.categories].sort((a, b) => a.name.localeCompare(b.name))
+        setCategories(sorted)
+        categoriesRef.current = sorted
+      }
+      if (data.collaborators) {
+        const sorted = [...data.collaborators].sort()
+        setCollaborators(sorted)
+        collaboratorsRef.current = sorted
+      }
     }
-    if (data.collaborators) {
-      const sorted = [...data.collaborators].sort()
-      setCollaborators(sorted)
-      collaboratorsRef.current = sorted
-    }
-  }
-}, [session])
+  }, [userId])
 
   const rolloverOverdueTasks = useCallback(async () => {
-  if (!session) return
+    if (!userId) return
 
-  const now = new Date()
-  const { data: currentNotes } = await supabase
-    .from('notes')
-    .select('*')
-    .neq('status', 'done')
-    .not('reminder_at', 'is', null)
-    .lt('reminder_at', now.toISOString())
-    .eq('type', 'task')
+    const now = new Date()
+    const { data: currentNotes } = await supabase
+      .from('notes')
+      .select('*')
+      .neq('status', 'done')
+      .not('reminder_at', 'is', null)
+      .lt('reminder_at', now.toISOString())
+      .eq('type', 'task')
 
-  if (!currentNotes || currentNotes.length === 0) return
+    if (!currentNotes || currentNotes.length === 0) return
 
-  const tomorrow = new Date(now)
-  tomorrow.setDate(tomorrow.getDate() + 1)
-  tomorrow.setHours(7, 0, 0, 0)
+    const tomorrow = new Date(now)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    tomorrow.setHours(7, 0, 0, 0)
 
-  await Promise.all(currentNotes.map(n =>
-    supabase.from('notes')
-      .update({ reminder_at: tomorrow.toISOString() })
-      .eq('id', n.id)
-  ))
+    await Promise.all(currentNotes.map(n =>
+      supabase.from('notes')
+        .update({ reminder_at: tomorrow.toISOString() })
+        .eq('id', n.id)
+    ))
 
-  await fetchNotes()
-}, [session, fetchNotes])
-  
- useEffect(() => {
-  supabase.auth.getSession().then(({ data: { session } }) => { setSession(session); setLoading(false) })
-  const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setSession(s))
-  return () => subscription.unsubscribe()
-}, [])
+    // Rechargement local direct pour briser la dépendance circulaire
+    const { data } = await supabase.from('notes').select('*').order('importance').order('created_at', { ascending: false });
+    setNotes(data || []);
+  }, [userId])
+    
+  // Écouteur de session Auth (S'exécute une seule fois au démarrage)
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => { setSession(session); setLoading(false) })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setSession(s))
+    return () => subscription.unsubscribe()
+  }, [])
 
-useEffect(() => {
-  fetchNotes().then(() => rolloverOverdueTasks())
-  fetchSettings()
-}, [fetchNotes, fetchSettings, rolloverOverdueTasks])
+  // CHARGEMENT INITIAL : Ne se déclenche STRICTEMENT que lorsque l'utilisateur se connecte ou se déconnecte
+  useEffect(() => {
+    if (userId) {
+      fetchNotes().then(() => rolloverOverdueTasks())
+      fetchSettings()
+    }
+  }, [userId, fetchNotes, fetchSettings, rolloverOverdueTasks])
 
 const saveCategories = async (newCats) => {
   const sorted = [...newCats].sort((a, b) => a.name.localeCompare(b.name))
