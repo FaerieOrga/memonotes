@@ -555,7 +555,7 @@ useEffect(() => {
   }
 
   return (
-    <div style={s.overlay} onClick={e => e.target===e.currentTarget && onClose()}>
+    <div style={s.overlay}>
       <div style={{...s.modal, animation:'slideUp 0.25s ease'}}
         onTouchEnd={e => e.stopPropagation()}  // ← AJOUT
   >
