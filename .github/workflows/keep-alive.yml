@@ -9,6 +9,7 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Supabase Health Endpoint
+      - name: Ping Supabase API
         run: |
-          curl -s -f "https://cxsjwqjcxzmznntrmlsr.supabase.co/auth/v1/health"
+          curl -s -f "https://cxsjwqjcxzmznntrmlsr.supabase.co/rest/v1/" \
+            -H "apikey: ${{ secrets.VITE_SUPABASE_ANON_KEY }}"
