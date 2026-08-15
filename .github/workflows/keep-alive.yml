@@ -2,15 +2,15 @@ name: Keep Supabase Alive
 
 on:
   schedule:
-    - cron: '0 3 * * *'  # Tous les jours à 3h UTC
-  workflow_dispatch:     # Permet le lancement manuel
+    - cron: '0 3 * * *'
+  workflow_dispatch:
 
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Supabase API
+      - name: Ping Supabase
         run: |
-          curl -s -f -X GET "https://cxsjwqjcxzmznntrmlsr.supabase.co/rest/v1/" \
+          curl -s "https://cxsjwqjcxzmznntrmlsr.supabase.co/rest/v1/" \
             -H "apikey: ${{ secrets.VITE_SUPABASE_ANON_KEY }}" \
             -H "Authorization: Bearer ${{ secrets.VITE_SUPABASE_ANON_KEY }}"
