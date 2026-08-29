@@ -2,15 +2,16 @@ name: Keep Supabase Alive
 
 on:
   schedule:
-    - cron: '0 3 * * *'
+    # S'exécute deux fois par jour (3h et 15h UTC) pour éviter tout oubli de GitHub
+    - cron: '0 3,15 * * *'
   workflow_dispatch:
 
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Supabase
+      - name: Ping Supabase Database
         run: |
-          curl -s "https://cxsjwqjcxzmznntrmlsr.supabase.co/rest/v1/" \
+          curl -f -sS "https://cxsjwqjcxzmznntrmlsr.supabase.co/rest/v1/notes?select=count&limit=1" \
             -H "apikey: ${{ secrets.VITE_SUPABASE_ANON_KEY }}" \
             -H "Authorization: Bearer ${{ secrets.VITE_SUPABASE_ANON_KEY }}"
