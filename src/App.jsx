@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from './lib/supabase' 
 
 const VAPID_PUBLIC_KEY = 'BAurdkv0qAKxkuzAq448zYqL5BuOjxWjBkXANNBAh7nDGho7UUsFgfu9TUyc4zg_vsZ4ggW3PVvK6Z_ZiTsNmXs'
+const SHARED_SETTINGS_ID = '231b1aa0-ed74-4fba-88fc-24f8beaef8d4'
 
 const Q = {
   1: { 
@@ -1008,26 +1009,26 @@ export default function App() {
   }, [userId]);
 
   const fetchSettings = useCallback(async () => {
-    if (!userId) return
-    const { data } = await supabase
-      .from('user_settings')
-      .select('*')
-      .limit(1)
-      .single()
-    if (data) {
-      settingsIdRef.current = data.id
-      if (data.categories) {
-        const sorted = [...data.categories].sort((a, b) => a.name.localeCompare(b.name))
-        setCategories(sorted)
-        categoriesRef.current = sorted
-      }
-      if (data.collaborators) {
-        const sorted = [...data.collaborators].sort()
-        setCollaborators(sorted)
-        collaboratorsRef.current = sorted
-      }
+  const { data } = await supabase
+    .from('user_settings')
+    .select('*')
+    .eq('id', SHARED_SETTINGS_ID)
+    .single()
+
+  if (data) {
+    settingsIdRef.current = data.id
+    if (data.categories) {
+      const sorted = [...data.categories].sort((a, b) => a.name.localeCompare(b.name))
+      setCategories(sorted)
+      categoriesRef.current = sorted
     }
-  }, [userId])
+    if (data.collaborators) {
+      const sorted = [...data.collaborators].sort()
+      setCollaborators(sorted)
+      collaboratorsRef.current = sorted
+    }
+  }
+}, [])
 
   const rolloverOverdueTasks = useCallback(async () => {
     if (!userId) return
@@ -1077,22 +1078,23 @@ const saveCategories = async (newCats) => {
   const sorted = [...newCats].sort((a, b) => a.name.localeCompare(b.name))
   setCategories(sorted)
   categoriesRef.current = sorted
-  await supabase.from('user_settings')
-    .update({ categories: sorted, collaborators: collaboratorsRef.current })
-    .eq('id', settingsIdRef.current)
-  await fetchSettings()
+
+  await supabase
+    .from('user_settings')
+    .update({ categories: sorted })
+    .eq('id', SHARED_SETTINGS_ID)
 }
 
 const saveCollaborators = async (newCollabs) => {
   const sorted = [...newCollabs].sort()
   setCollaborators(sorted)
   collaboratorsRef.current = sorted
-  await supabase.from('user_settings')
-    .update({ collaborators: sorted, categories: categoriesRef.current })
-    .eq('id', settingsIdRef.current)
-  await fetchSettings()
-}
 
+  await supabase
+    .from('user_settings')
+    .update({ collaborators: sorted })
+    .eq('id', SHARED_SETTINGS_ID)
+}
   
  const saveNote = async (payload) => {
   const { id, type, status, assignees, ...dataToSave } = payload
