@@ -13,5 +13,24 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+
+    <!-- Script pour intégrer le bouton NotesFaérie à côté des onglets -->
+    <script>
+      window.addEventListener('load', function() {
+        var observer = new MutationObserver(function() {
+          // Cherche le conteneur des onglets (Tâches, Notes, Calendrier)
+          var nav = document.querySelector('nav') || document.querySelector('header') || document.querySelector('.tabs') || document.querySelector('#root > div > div');
+          if (nav && !document.querySelector('.btn-notesfaerie')) {
+            var link = document.createElement('a');
+            link.href = 'https://faerieorga.github.io/notesfaerie/';
+            link.className = 'btn-notesfaerie';
+            link.innerHTML = '📝 NotesFaérie';
+            
+            nav.appendChild(link);
+          }
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+      });
+    </script>
   </body>
 </html>
