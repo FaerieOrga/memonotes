@@ -55,31 +55,25 @@ input, textarea, select {
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* Bouton de redirection vers NotesFaérie */
+/* Bouton de redirection vers NotesFaérie (intégré aux onglets) */
 .btn-notesfaerie {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #ffffff;
-  border: 1px solid rgba(0, 0, 0, 0.12);
-  color: #334155;
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 14px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted); /* Utilise la variable de texte discret de ton thème */
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 15px;
   font-weight: 500;
   text-decoration: none;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   transition: all 0.2s ease;
-  margin-left: 8px;
+  margin-left: 4px;
   vertical-align: middle;
 }
 
 .btn-notesfaerie:hover {
-  background: #38bdf8;
-  color: #ffffff;
-  border-color: #38bdf8;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
+  background: var(--surface2); /* Fond de survol assorti au thème */
+  color: var(--text);          /* Texte lumineux au survol */
 }
