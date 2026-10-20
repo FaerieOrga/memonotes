@@ -1161,26 +1161,21 @@ const getCatCount = (catId) => {
       <header style={s.header}>
         <h1 style={s.logo}>Mémo Faérie</h1>
         
-     <nav style={s.nav}>
+<nav style={s.nav}>
   {[
     ['notes', '📋 Tâches'],
     ['simple_notes', '📝 Notes'],
     ['journal', '📓 Journal de bord'],
     ['calendar', '📅 Calendrier'],
     ['settings', '⚙️ Paramètres']
-  ].map(([id, label]) => id === 'journal' ? (
-    <a
-      key={id}
-      href="https://faerieorga.github.io/notesfaerie/"
-      style={{ ...s.navBtn, textDecoration: 'none' }}
-    >
-      {label}
-    </a>
-  ) : (
+  ].map(([id, label]) => (
     <button
       key={id}
       style={{...s.navBtn, ...(tab === id ? s.navBtnActive : {})}}
-      onClick={() => setTab(id)}
+      onClick={() => {
+        if (id === 'journal') window.location.href = 'https://faerieorga.github.io/notesfaerie/'
+        else setTab(id)
+      }}
     >
       {label}
     </button>
