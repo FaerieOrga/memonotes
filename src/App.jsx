@@ -1175,7 +1175,13 @@ const getCatCount = (catId) => {
     >
       {label}
     </button>
-  ))}
+    ))}
+  <a
+    href="https://faerieorga.github.io/notesfaerie/"
+    style={{ ...s.navBtn, textDecoration: 'none' }}
+  >
+    📓 Journal de bord
+  </a>
 </nav>
       </header>
 
@@ -1429,10 +1435,12 @@ logo: {
   margin: '0 0 5px 0', // Petit espace sous le logo avant les boutons
   width: '100%'
 },
- nav: {
+   nav: {
     display: 'flex',
-    gap: 2, // On réduit l'écart entre les boutons pour les rapprocher du centre 
-    justifyContent: 'center'
+    flexWrap: 'wrap',
+    gap: '4px 2px',
+    justifyContent: 'center',
+    padding: '0 8px'
   },
   navBtn: {
     background: 'transparent',
