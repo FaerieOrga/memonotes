@@ -1165,23 +1165,26 @@ const getCatCount = (catId) => {
   {[
     ['notes', '📋 Tâches'],
     ['simple_notes', '📝 Notes'],
+    ['journal', '📓 Journal de bord'],
     ['calendar', '📅 Calendrier'],
     ['settings', '⚙️ Paramètres']
-  ].map(([id, label]) => (
-    <button 
-      key={id} 
-      style={{...s.navBtn, ...(tab === id ? s.navBtnActive : {})}} 
+  ].map(([id, label]) => id === 'journal' ? (
+    <a
+      key={id}
+      href="https://faerieorga.github.io/notesfaerie/"
+      style={{ ...s.navBtn, textDecoration: 'none' }}
+    >
+      {label}
+    </a>
+  ) : (
+    <button
+      key={id}
+      style={{...s.navBtn, ...(tab === id ? s.navBtnActive : {})}}
       onClick={() => setTab(id)}
     >
       {label}
     </button>
-    ))}
-  <a
-    href="https://faerieorga.github.io/notesfaerie/"
-    style={{ ...s.navBtn, textDecoration: 'none' }}
-  >
-    📓 Journal de bord
-  </a>
+  ))}
 </nav>
       </header>
 
