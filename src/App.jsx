@@ -984,7 +984,7 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [notes, setNotes] = useState([])
   const [categories, setCategories] = useState([])
-  const [tab, setTab] = useState('notes')
+  const [tab, setTab] = useState(() => window.location.hash === '#notes' ? 'simple_notes' : 'notes')
   const [modal, setModal] = useState(null)
   const [filterQ, setFilterQ] = useState(0)
   const [filterCats, setFilterCats] = useState([])
